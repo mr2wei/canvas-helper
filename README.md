@@ -1,4 +1,3 @@
 # CanHelp
 
-Contributors: Wei Jiang
-Bhargav Sairam
+Contributors: Wei Jiang, Gavin White, Bhargav Sairam
