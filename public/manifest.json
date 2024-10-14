@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "My React Extension",
+  "version": "1.0",
+  "description": "A simple React-based browser extension.",
+  "action": {
+    "default_icon": {
+      "16": "logo16.png",
+      "48": "logo48.png",
+      "128": "logo128.png"
+    }
+  },
+  "icons": {
+    "16": "logo16.png",
+    "48": "logo48.png",
+    "128": "logo128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "content_scripts": [ {
+    "js": [ "js/content.js" ],
+    "matches": [ "https://*/*" ],
+    "run_at": "document_end"
+ } ]
+}
