@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "My React Extension",
+  "name": "Canvas Helper",
   "version": "1.0",
-  "description": "A simple React-based browser extension.",
+  "description": "Extension to get all information from canvas in one place.",
   "action": {
     "default_icon": {
       "16": "logo16.png",
       "48": "logo48.png",
       "128": "logo128.png"
-    }
+    },
+    "default_popup": "popup/popup.html"
   },
   "icons": {
     "16": "logo16.png",
@@ -21,10 +22,10 @@
     "storage"
   ],
   "background": {
-    "service_worker": "js/background.js"
+    "service_worker": "scripts/background.js"
   },
   "content_scripts": [ {
-    "js": [ "js/content.js" ],
+    "js": [ "scripts/content.js" ],
     "matches": [ "https://*/*" ],
     "run_at": "document_end"
  } ]
