@@ -1,4 +1,5 @@
 const domain = window.location.origin;
+console.log('Content script loaded on:', window.location.href);
 
 isCanvasPage = async () => {
     let result = await new Promise((resolve, reject) => {
@@ -21,27 +22,23 @@ isCanvasPage = async () => {
 }
 
 mainExtension = () => {
-    console.log("Wei's Extension running!");
+    console.log("Extension running!");
 
-    // get classes and classesHash from chrome.storage.local
-    chrome.storage.local.get(['classes', 'classesHash'], data => {
+    // get classes, classesHash, plannable, and plannableHash from chrome.storage.local
+    chrome.storage.local.get(['classes', 'classesHash', 'plannable', 'plannableHash'], data => {
         if (chrome.runtime.lastError) {
-            console.error('Error getting classes and classesHash:', chrome.runtime.lastError);
+            console.error('Error getting data from storage:', chrome.runtime.lastError);
         } else {
-            const { classes, classesHash } = data;
+            const { classes, classesHash, plannable, plannableHash } = data;
+            
+            // Check and fetch classes
             if (classes && classesHash) {
-                // if classes exist, check if classes is up to date
                 console.log('Classes found, checking classes...');
                 checkClasses(classesHash);
             } else {
-                // if not, fetch classes
                 console.log('Classes not found, fetching classes...');
                 fetchClasses().then(classes => {
                     console.log('Classes fetched successfully.');
-                    console.log('Classes: ', classes);
-                    console.log('Classes type: ', typeof classes);
-
-                    // set classes and classesHash
                     const classesString = JSON.stringify(classes);
                     hashJson(classesString).then(hash => {
                         chrome.storage.local.set({classes: classes, classesHash: hash}, () => {
@@ -54,6 +51,29 @@ mainExtension = () => {
                     });
                 }).catch(error => {
                     console.error('Error fetching classes:', error);
+                });
+            }
+
+            // Check and fetch plannable
+            if (plannable && plannableHash) {
+                console.log('Plannable found, checking plannable...');
+                checkPlannable(plannableHash);
+            } else {
+                console.log('Plannable not found, fetching plannable...');
+                fetchPlannable().then(plannable => {
+                    console.log('Plannable fetched successfully.');
+                    const plannableString = JSON.stringify(plannable);
+                    hashJson(plannableString).then(hash => {
+                        chrome.storage.local.set({plannable: plannable, plannableHash: hash}, () => {
+                            if (chrome.runtime.lastError) {
+                                console.error('Error setting plannable and plannableHash:', chrome.runtime.lastError);
+                            } else {
+                                console.log('Plannable and plannableHash saved successfully.');
+                            }
+                        });
+                    });
+                }).catch(error => {
+                    console.error('Error fetching plannable:', error);
                 });
             }
         }
@@ -95,6 +115,7 @@ setCanvasDomain = async () => {
         });
     }
 }
+
 checkClasses = async (storedClassesHash) => {
     // fetch classes
     let newClasses = await fetchClasses();
@@ -114,7 +135,7 @@ checkClasses = async (storedClassesHash) => {
         });
     }
 }
-   
+
 fetchClasses = async () => {
     try {
         const classes = await fetchData(domain + '/api/v1/courses?enrollment_state=active&per_page=100');
@@ -123,6 +144,42 @@ fetchClasses = async () => {
             return null;
         } else {
             return classes;
+        }
+    } catch (error) {
+        console.error('Fetch error: ', error);
+        return null;
+    }
+}
+
+checkPlannable = async (storedPlannableHash) => {
+    // fetch plannable items
+    let newPlannable = await fetchPlannable();
+
+    // compare the hash of the fetched plannable items with the passed in plannableHash
+    const newPlannableString = JSON.stringify(newPlannable);
+    const newHash = await hashJson(newPlannableString);
+
+    if (newHash !== storedPlannableHash) {
+        // if not equal, update plannable and plannableHash
+        chrome.storage.local.set({plannable: newPlannable, plannableHash: newHash}, () => {
+            if (chrome.runtime.lastError) {
+                console.error('Error setting plannable and plannableHash:', chrome.runtime.lastError);
+            } else {
+                console.log('Plannable and plannableHash updated successfully.');
+            }
+        });
+    }
+}
+
+fetchPlannable = async () => {
+    try {
+        const currentDate = new Date().toISOString();
+        const plannable = await fetchData(domain + '/api/v1/planner/items?start_date=' + encodeURIComponent(currentDate) + '&per_page=75');
+        if (plannable.errors) {
+            console.log('Received an unexpected response, possibly not a Canvas domain.');
+            return null;
+        } else {
+            return plannable;
         }
     } catch (error) {
         console.error('Fetch error: ', error);
@@ -150,5 +207,52 @@ async function hashJson(jsonString) {
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
     return hashHex;
 }
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log('Content script received message:', request);
+    if (request.action === 'refreshData') {
+        (async () => {
+            try {
+                // Fetch and store classes
+                const classes = await fetchClasses();
+                const classesString = JSON.stringify(classes);
+                const classesHash = await hashJson(classesString);
+                await new Promise((resolve, reject) => {
+                    chrome.storage.local.set({ classes: classes, classesHash: classesHash }, () => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Error setting classes and classesHash:', chrome.runtime.lastError);
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            console.log('Classes and classesHash saved successfully.');
+                            resolve();
+                        }
+                    });
+                });
+
+                // Fetch and store plannable items
+                const plannable = await fetchPlannable();
+                const plannableString = JSON.stringify(plannable);
+                const plannableHash = await hashJson(plannableString);
+                await new Promise((resolve, reject) => {
+                    chrome.storage.local.set({ plannable: plannable, plannableHash: plannableHash }, () => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Error setting plannable and plannableHash:', chrome.runtime.lastError);
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            console.log('Plannable and plannableHash saved successfully.');
+                            resolve();
+                        }
+                    });
+                });
+
+                sendResponse({ status: 'Data refreshed' });
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                sendResponse({ status: 'Error refreshing data' });
+            }
+        })();
+        return true; // Keep the message channel open for sendResponse
+    }
+});
 
 isCanvasPage();
