@@ -1,33 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    <div>
-        <h1>Home</h1>
-        <div class ="course-container">
-            <h3>Courses:</h3>
-            <ul id="courses-list"></ul>
-        </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Can Help</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        min-width: 300px;
+        background: linear-gradient(to bottom, #d4af37, #966f33);
+        font-family: Arial, sans-serif;
+      }
 
-        <div class="assignments">
-            <h3>Assignments:</h3>
-            <ul id="assignments-list"></ul>
-        </div>  
+      h1 {
+        color: white;
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+      }
 
-        <div class="announcements">
-            <h3>Announcements:</h3>
-            <ul id="announcements-list"></ul>
-        </div>
+      .section {
+        margin-bottom: 15px;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
 
-        <button id="refresh-button">Refresh</button>
+      .section-header {
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-size: 18px;
+        color: #333;
+      }
+
+      .section-content {
+        padding: 15px;
+        display: none;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .section-content.active {
+        display: block;
+      }
+
+      .expand-button {
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 20px;
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+      }
+
+      /* Section specific colors */
+      #announcements {
+        background-color: #98c1a8;
+      }
+
+      #calendar {
+        background-color: #f2d4b7;
+      }
+
+      #assignments {
+        background-color: #f26b3a;
+      }
+
+      #weekly {
+        background-color: #f2d4b7;
+      }
+
+      #homework {
+        background-color: #b7d4f2;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      li {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      li:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Can Help</h1>
+
+    <div id="announcements" class="section">
+      <div class="section-header">
+        Recent Announcements
+        <button class="expand-button">+</button>
+      </div>
+      <div class="section-content">
+        <ul id="announcements-list"></ul>
+      </div>
     </div>
 
+    <div id="calendar" class="section">
+      <div class="section-header">
+        Classes
+        <button class="expand-button">+</button>
+      </div>
+      <div class="section-content">
+        <ul id="courses-list"></ul>
+      </div>
+    </div>
 
+    <div id="assignments" class="section">
+      <div class="section-header">
+        Priority Assignments
+        <button class="expand-button">+</button>
+      </div>
+      <div class="section-content">
+        <ul id="assignments-list"></ul>
+      </div>
+    </div>
 
-    <script src="popup.js"></script> <!-- Link to the external JS file -->
-</body>
+    <div id="weekly" class="section">
+      <div class="section-header">
+        Weekly Report
+        <button class="expand-button">+</button>
+      </div>
+      <div class="section-content">
+        <ul id="weekly-list"></ul>
+      </div>
+    </div>
+
+    <div id="homework" class="section">
+      <div class="section-header">
+        Homework Help
+        <button class="expand-button">+</button>
+      </div>
+      <div class="section-content">
+        <ul id="homework-list"></ul>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
 </html>
